@@ -1,16 +1,10 @@
 import { expressjwt } from 'express-jwt';
 import jwksRsa from 'jwks-rsa';
 import { ManagementClient } from 'auth0';
+import { config } from './environment';
 
-// Auth0 configuration
-export const auth0Config = {
-  domain: process.env.AUTH0_DOMAIN || 'your-domain.auth0.com',
-  clientId: process.env.AUTH0_CLIENT_ID || 'your-client-id',
-  clientSecret: process.env.AUTH0_CLIENT_SECRET || 'your-client-secret',
-  audience: process.env.AUTH0_AUDIENCE || 'https://your-api.com',
-  issuer: process.env.AUTH0_ISSUER || `https://${process.env.AUTH0_DOMAIN}/`,
-  algorithms: ['RS256'] as const,
-};
+// Auth0 configuration (using centralized config)
+export const auth0Config = config.auth0;
 
 // JWT middleware for protecting routes
 export const checkJwt = expressjwt({
@@ -63,7 +57,12 @@ export const getUserRoles = (req: any): string[] => {
   if (!token) return [];
   
   // Extract roles from token claims
-  const roles = token['https://your-app.com/roles'] || token.roles || [];
+  // Try multiple possible claim locations
+  const roles = token['https://edu-platform.com/roles'] || 
+                token['roles'] || 
+                token['https://your-domain.auth0.com/roles'] ||
+                token.permissions || 
+                [];
   return Array.isArray(roles) ? roles : [roles];
 };
 

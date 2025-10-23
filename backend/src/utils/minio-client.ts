@@ -1,5 +1,6 @@
 import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
+import { config } from '../config/environment';
 import logger from '../config/logger';
 
 export class MinioClient {
@@ -10,21 +11,15 @@ export class MinioClient {
 
   public static getInstance(): Minio.Client {
     if (!MinioClient.instance) {
-      const endpoint = process.env.MINIO_ENDPOINT || 'localhost';
-      const port = parseInt(process.env.MINIO_PORT || '9000', 10);
-      const useSSL = process.env.MINIO_USE_SSL === 'true';
-      const accessKey = process.env.MINIO_ACCESS_KEY || 'minioadmin';
-      const secretKey = process.env.MINIO_SECRET_KEY || 'minioadmin';
-
       MinioClient.instance = new Minio.Client({
-        endPoint: endpoint,
-        port: port,
-        useSSL: useSSL,
-        accessKey: accessKey,
-        secretKey: secretKey,
+        endPoint: config.minio.endpoint,
+        port: config.minio.port,
+        useSSL: config.minio.useSSL,
+        accessKey: config.minio.accessKey,
+        secretKey: config.minio.secretKey,
       });
       
-      logger.info('MinIO Client Initialized');
+      logger.info('✅ MinIO Client Initialized');
       MinioClient.initializeBuckets();
     }
     return MinioClient.instance;
@@ -35,19 +30,20 @@ export class MinioClient {
     
     try {
       const client = MinioClient.instance;
-      const buckets = ['uploads', 'thumbnails', 'videos', 'processed-videos'];
+      const buckets = [config.minio.bucketName, 'thumbnails', 'videos', 'processed-videos'];
       
       for (const bucket of buckets) {
         const exists = await client.bucketExists(bucket);
         if (!exists) {
           await client.makeBucket(bucket);
-          logger.info(`Created MinIO bucket: ${bucket}`);
+          logger.info(`✅ Created MinIO bucket: ${bucket}`);
         }
       }
       
       MinioClient.initialized = true;
+      logger.info('✅ MinIO buckets initialized');
     } catch (error) {
-      logger.error('Error initializing MinIO buckets:', error);
+      logger.error('❌ Error initializing MinIO buckets:', error);
     }
   }
 

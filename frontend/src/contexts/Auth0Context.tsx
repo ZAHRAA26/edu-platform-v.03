@@ -1,16 +1,18 @@
 import React, { createContext, useContext, type ReactNode } from 'react';
 import { Auth0Provider, useAuth0, User } from '@auth0/auth0-react';
+import { config } from '../config/environment';
 
-// Auth0 Configuration
+// Auth0 Configuration (using centralized config)
 const auth0Config = {
-  domain: import.meta.env.VITE_AUTH0_DOMAIN || 'your-tenant.auth0.com',
-  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID || 'your-client-id',
+  domain: config.auth0.domain,
+  clientId: config.auth0.clientId,
   authorizationParams: {
-    redirect_uri: window.location.origin + '/callback',
-    scope: 'openid profile email'
+    redirect_uri: config.auth0.redirectUri + '/callback',
+    scope: config.auth0.scope,
+    audience: config.auth0.audience,
   },
   cacheLocation: 'localstorage' as const,
-  useRefreshTokens: true
+  useRefreshTokens: true,
 };
 
 // Extended User interface with our custom fields

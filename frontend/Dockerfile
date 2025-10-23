@@ -15,9 +15,9 @@ COPY . ./
 RUN npm run build
 RUN ls -l dist
 
-# Serve the app with Nginx (or a simple static server)
-# For simplicity, we'll use serve for now
-RUN npm install -g serve
+# Install curl for health checks
+RUN apk add --no-cache curl
 
+# Serve the app with Vite preview (better for development)
 EXPOSE 3000
-CMD [ "serve", "-s", "dist", "-l", "3000" ]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]

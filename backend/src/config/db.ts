@@ -1,17 +1,27 @@
 import mongoose from 'mongoose';
+import { config } from './environment';
+import logger from './logger';
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI;
-    if (!mongoURI) {
-      console.error('MONGO_URI is not defined in environment variables.');
-      process.exit(1);
-    }
-    await mongoose.connect(mongoURI);
-    console.log('MongoDB Connected...');
+    await mongoose.connect(config.database.mongoUri, config.database.options);
+    logger.info('✅ MongoDB Connected successfully');
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      logger.error('❌ MongoDB connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('⚠️  MongoDB disconnected');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      logger.info('🔄 MongoDB reconnected');
+    });
+    
   } catch (err: any) {
-    console.error(err.message);
-    // Exit process with failure
+    logger.error('❌ MongoDB connection failed:', err.message);
     process.exit(1);
   }
 };

@@ -1,9 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { usePopularCourses } from '../hooks/useCourses';
+import { useCoursesByCategory } from '../hooks/useCourses';
+import { config } from '../config/environment';
 
 const Home: React.FC = () => {
   const { isAuthenticated, login } = useAuth();
+  
+  // Fetch popular courses from API
+  const { data: popularCourses, loading: popularLoading, error: popularError } = usePopularCourses(6);
+  
+  // Fetch programming courses as featured category
+  const { data: programmingCourses, loading: programmingLoading } = useCoursesByCategory('البرمجة', 4);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -90,6 +99,97 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Popular Courses Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">الدورات الأكثر شعبية</h2>
+            <p className="text-xl text-gray-600">اكتشف الدورات التي يختارها الطلاب حول العالم</p>
+          </div>
+          
+          {popularLoading ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-300"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-4"></div>
+                    <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : popularError ? (
+            <div className="text-center text-red-600 py-8">
+              <p>حدث خطأ في تحميل الدورات الشائعة</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8">
+              {popularCourses?.slice(0, 6).map((course) => (
+                <div key={course._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    {course.thumbnail ? (
+                      <img 
+                        src={course.thumbnail} 
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-white text-6xl">📚</div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                        {course.category}
+                      </span>
+                      <span className="text-sm text-gray-500">{course.level}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                      {course.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2">
+                      {course.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {course.price === 0 ? 'مجاني' : `${course.price} ر.س`}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1 space-x-reverse text-yellow-500">
+                        <span className="text-sm">{course.averageRating?.toFixed(1) || '0.0'}</span>
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <Link
+                        to={`/courses/${course._id}`}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-300 text-center block"
+                      >
+                        عرض التفاصيل
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="text-center mt-12">
+            <Link
+              to="/courses"
+              className="px-8 py-4 border-2 border-blue-600 text-blue-600 font-semibold rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300"
+            >
+              عرض جميع الدورات
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -99,7 +199,7 @@ const Home: React.FC = () => {
               <div className="text-xl opacity-90">طالب نشط</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">50+</div>
+              <div className="text-4xl font-bold mb-2">{popularCourses?.length || 50}+</div>
               <div className="text-xl opacity-90">دورة تدريبية</div>
             </div>
             <div>
